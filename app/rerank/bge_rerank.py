@@ -1,9 +1,8 @@
 """bge-reranker-large 重排器：本地 CrossEncoder，无 GPU 自动 CPU。"""
 from functools import lru_cache
 
+from app.config import get_settings  # 先加载 .env（HF_ENDPOINT 等）再 import 模型库
 from sentence_transformers import CrossEncoder
-
-from app.config import get_settings
 
 
 class Reranker:

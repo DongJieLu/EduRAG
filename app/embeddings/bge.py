@@ -2,9 +2,9 @@
 from functools import lru_cache
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
-from app.config import get_settings
+from app.config import get_settings  # 先加载 .env（HF_ENDPOINT 等）再 import 模型库
+from sentence_transformers import SentenceTransformer
 
 
 class BGEEncoder:

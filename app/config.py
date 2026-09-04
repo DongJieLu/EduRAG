@@ -1,7 +1,15 @@
 """全局配置：全部从 .env / 环境变量读取，禁止硬编码密钥与连接串。"""
+import os
 from functools import lru_cache
 
+from dotenv import dotenv_values
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# 仅将 HF_ENDPOINT 透传到 os.environ，供 huggingface_hub 读取（需在 import 模型库前生效）。
+# 不用 load_dotenv 全量加载，避免污染 os.environ 影响测试隔离。
+_hf_endpoint = dotenv_values(".env").get("HF_ENDPOINT")
+if _hf_endpoint:
+    os.environ.setdefault("HF_ENDPOINT", _hf_endpoint)
 
 
 class Settings(BaseSettings):
@@ -29,7 +37,7 @@ class Settings(BaseSettings):
 
     # --- MySQL ---
     mysql_host: str = "localhost"
-    mysql_port: int = 3306
+    mysql_port: int = 3308
     mysql_user: str = "eduqa"
     mysql_password: str = "eduqa"
     mysql_db: str = "eduqa"

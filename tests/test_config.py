@@ -9,7 +9,7 @@ def test_settings_defaults_when_no_env_file():
     assert s.rerank_model_name == "BAAI/bge-reranker-large"
     assert s.deepseek_model == "deepseek-chat"
     assert s.embed_batch_size == 64
-    assert s.mysql_port == 3306
+    assert s.mysql_port == 3308
     assert s.redis_port == 6379
 
 
