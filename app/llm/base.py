@@ -28,3 +28,14 @@ class BaseLLM(ABC):
     ) -> LLMResponse:
         """发送多轮消息，返回模型回复。"""
         raise NotImplementedError
+
+    def stream(
+        self,
+        messages: list[ChatMessage],
+        temperature: float = 0.0,
+        **kwargs,
+    ):
+        """流式产出 token 字符串。默认实现：一次性返回完整内容（非真正流式）。"""
+        resp = self.chat(messages, temperature=temperature, **kwargs)
+        if resp.content:
+            yield resp.content

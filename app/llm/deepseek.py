@@ -33,3 +33,21 @@ class DeepSeekLLM(BaseLLM):
             "completion_tokens": getattr(resp.usage, "completion_tokens", 0),
         }
         return LLMResponse(content=choice.content or "", model=resp.model, usage=usage)
+
+    def stream(
+        self,
+        messages: list[ChatMessage],
+        temperature: float = 0.0,
+        **kwargs,
+    ):
+        stream = self._client.chat.completions.create(
+            model=self._model,
+            messages=[{"role": m.role, "content": m.content} for m in messages],
+            temperature=temperature,
+            stream=True,
+            **kwargs,
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content if chunk.choices else None
+            if delta:
+                yield delta

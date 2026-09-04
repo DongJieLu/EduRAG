@@ -1,6 +1,8 @@
 """bge-reranker-large 重排器：本地 CrossEncoder，无 GPU 自动 CPU。"""
 from functools import lru_cache
 
+import numpy as np
+
 from app.config import get_settings  # 先加载 .env（HF_ENDPOINT 等）再 import 模型库
 from sentence_transformers import CrossEncoder
 
@@ -11,10 +13,12 @@ class Reranker:
         self._model = CrossEncoder(self._model_name)
 
     def rerank(self, query: str, documents: list[str]) -> list[float]:
-        """返回每个文档与 query 的相关性分数（越高越相关）。"""
+        """返回每个文档与 query 的相关性分数（sigmoid 归一化到 0~1，越高越相关）。"""
         pairs = [[query, doc] for doc in documents]
         scores = self._model.predict(pairs)
-        return [float(s) for s in scores]
+        scores = np.asarray(scores, dtype="float32")
+        probs = 1.0 / (1.0 + np.exp(-scores))  # sigmoid 归一化，便于与阈值比较
+        return [float(p) for p in probs]
 
 
 @lru_cache
