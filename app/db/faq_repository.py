@@ -31,3 +31,15 @@ class FAQRepository:
                 text("UPDATE faq SET hit_count = hit_count + 1 WHERE faq_id = :faq_id"),
                 {"faq_id": faq_id},
             )
+
+    def top_faqs(self, limit: int = 10) -> list[dict]:
+        """按命中次数返回热点 FAQ Top N（供统计看板）。"""
+        with self._engine.connect() as conn:
+            rows = conn.execute(
+                text(
+                    "SELECT question, category, hit_count FROM faq "
+                    "WHERE status = 1 ORDER BY hit_count DESC, faq_id ASC LIMIT :limit"
+                ),
+                {"limit": limit},
+            ).fetchall()
+            return [dict(r._mapping) for r in rows]

@@ -26,5 +26,32 @@ services:
       - "6380:6379"
     command: redis-server --appendonly yes
 
+  # 应用服务（可选）：开发期建议本地直接跑，需拉起时用 --profile app
+  app:
+    build: .
+    container_name: eduqa-app
+    profiles: ["app"]
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: eduqa
+      MYSQL_PASSWORD: eduqa
+      MYSQL_DB: eduqa
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CHROMA_PERSIST_DIR: /app/data/chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/app/data/chroma
+      - model_cache:/root/.cache/huggingface
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
 volumes:
   mysql_data:
+  chroma_data:
+  model_cache:

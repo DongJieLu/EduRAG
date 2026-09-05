@@ -27,10 +27,10 @@ class FakeGenerator:
         self._result = result or GenerationResult(answer="答案", citations=[])
         self._stream = stream_tokens or []
 
-    def generate(self, question, contexts):
+    def generate(self, question, contexts, history=None):
         return self._result
 
-    def stream(self, question, contexts):
+    def stream(self, question, contexts, history=None):
         yield from self._stream
 
     def parse_plain_result(self, content, contexts, confidence=0.0):

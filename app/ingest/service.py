@@ -73,10 +73,25 @@ class IngestService:
 
         self._store.add(ids=ids, texts=texts, embeddings=embeddings, metadatas=metadatas)
         self._repo.update_doc_chunk_count(doc_id, len(chunks))
+        self._invalidate_cache(category)
         return {"doc_id": doc_id, "chunk_count": len(chunks)}
 
-    def delete_document(self, doc_id: int) -> None:
+    def delete_document(self, doc_id: int, category: str | None = None) -> None:
         """删除文档（MySQL chunks + doc 标记删除 + Chroma 向量）。"""
         milvus_ids = self._repo.delete_document(doc_id)
         if milvus_ids:
             self._store.delete_by_doc(doc_id)
+        if category:
+            self._invalidate_cache(category)
+
+    def _invalidate_cache(self, category: str | None) -> None:
+        """文档更新后清理该方向的答案缓存（qa:ans:{category}:*）。"""
+        try:
+            from app.rag.cache import AnswerCache
+
+            AnswerCache().invalidate_category(category)
+        except Exception as exc:  # noqa: BLE001
+            # 缓存清理失败不应阻断入库主流程
+            import logging
+
+            logging.getLogger(__name__).warning("答案缓存清理失败: %s", exc)

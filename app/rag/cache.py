@@ -1,4 +1,7 @@
-"""答案缓存：qa:ans:{md5(question+category)}（Redis，不可用时降级进程内存）。"""
+"""答案缓存：qa:ans:{category}:{md5(question)}（Redis，不可用时降级进程内存）。
+
+category 作为明文段写入 key，便于文档更新后按方向清理缓存（规格 5.8）。
+"""
 from __future__ import annotations
 
 import hashlib
@@ -36,9 +39,8 @@ class AnswerCache:
 
     @staticmethod
     def _key(question: str, category: str | None) -> str:
-        raw = f"{question}|{category or ''}"
-        digest = hashlib.md5(raw.encode("utf-8")).hexdigest()
-        return f"qa:ans:{digest}"
+        digest = hashlib.md5(question.encode("utf-8")).hexdigest()
+        return f"qa:ans:{category or 'all'}:{digest}"
 
     def get(self, question: str, category: str | None) -> dict | None:
         key = self._key(question, category)
@@ -57,3 +59,15 @@ class AnswerCache:
             self._redis.set(key, json.dumps(data, ensure_ascii=False), ex=ttl)
         else:
             self._memory[key] = data
+
+    def invalidate_category(self, category: str | None) -> int:
+        """清理某方向（或全部）的答案缓存，返回清理的 key 数。"""
+        prefix = f"qa:ans:{category or 'all'}:"
+        if not self._redis_ok():
+            removed = sum(1 for k in list(self._memory) if k.startswith(prefix))
+            self._memory = {k: v for k, v in self._memory.items() if not k.startswith(prefix)}
+            return removed
+        keys = list(self._redis.scan_iter(match=f"{prefix}*", count=100))
+        if keys:
+            self._redis.delete(*keys)
+        return len(keys)

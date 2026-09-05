@@ -120,3 +120,22 @@ def test_route_passes_category_to_faq():
     router = Router(faq_service=faq, llm=FakeLLM())
     router.route("容器编排工具", category="ops")
     assert faq.calls == 1
+
+
+# --- route_detail 落库字段 ---
+
+def test_route_detail_present_on_l1():
+    r = _router().route("什么是 RAG？")
+    assert r["route_detail"]["l1"]["hit"] is True
+    assert r["route_detail"]["l1"]["intent"] == "faq"
+
+
+def test_route_detail_l2_similarity_recorded():
+    r = _router(similarity=0.93).route("向量数据库用途")
+    assert r["route_detail"]["l2"]["similarity"] == 0.93
+    assert r["route_detail"]["l2"]["decision"] == "faq"
+
+
+def test_route_detail_l3_recorded_when_pending():
+    r = _router(similarity=0.80, intent="rag").route("问题")
+    assert r["route_detail"]["l3"]["intent"] == "rag"

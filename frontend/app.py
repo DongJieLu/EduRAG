@@ -15,6 +15,7 @@ if hasattr(sys.stdout, "reconfigure"):
 import gradio as gr
 import pandas as pd
 
+from app.api.stats import StatsService
 from app.ingest.repository import KnowledgeRepository
 from app.ingest.service import IngestService
 from app.rag.chat_service import ChatService
@@ -102,6 +103,39 @@ def delete_document(doc_id) -> str:
         return f"删除失败：{exc}"
 
 
+# --- 统计看板 ---
+
+def _stats(days: int) -> dict:
+    return StatsService().get_stats(days=int(days))
+
+
+def stats_summary(days: int) -> str:
+    d = _stats(days)
+    return f"近 {days} 天共 **{d['total']}** 条问答 · 平均延迟 **{d['avg_latency_ms']}** ms"
+
+
+def intent_dist_df(days: int) -> pd.DataFrame:
+    dist = _stats(days)["intent_distribution"] or {"暂无数据": 0}
+    return pd.DataFrame([{"意图": k, "数量": v} for k, v in dist.items()])
+
+
+def strategy_dist_df(days: int) -> pd.DataFrame:
+    dist = _stats(days)["strategy_distribution"] or {"暂无数据": 0}
+    return pd.DataFrame([{"策略": k, "数量": v} for k, v in dist.items()])
+
+
+def daily_latency_df(days: int) -> pd.DataFrame:
+    daily = _stats(days)["daily"] or [{"date": "暂无", "count": 0, "avg_latency_ms": 0}]
+    return pd.DataFrame(daily).rename(columns={"avg_latency_ms": "平均延迟ms", "count": "问答数"})
+
+
+def faq_top_df(days: int) -> pd.DataFrame:
+    top = _stats(days)["faq_top"]
+    if not top:
+        return pd.DataFrame(columns=["question", "hits", "category"])
+    return pd.DataFrame(top)
+
+
 def build_demo() -> gr.Blocks:
     with gr.Blocks(title="EduQA 课程问答助手") as demo:
         gr.Markdown("# EduQA 课程问答助手")
@@ -146,6 +180,25 @@ def build_demo() -> gr.Blocks:
             refresh_btn.click(list_documents, [list_category], docs_table)
             list_category.change(list_documents, [list_category], docs_table)
             del_btn.click(delete_document, [del_id], del_out)
+
+        with gr.Tab("统计"):
+            gr.Markdown("问答统计看板（数据来自 qa_log 与 FAQ 命中计数）")
+            days_slider = gr.Slider(1, 30, value=7, step=1, label="统计天数")
+            summary_md = gr.Markdown()
+            refresh_stats = gr.Button("刷新统计")
+            with gr.Row():
+                intent_plot = gr.BarPlot(x="意图", y="数量", title="意图分布")
+                strategy_plot = gr.BarPlot(x="策略", y="数量", title="策略分布")
+            daily_plot = gr.LinePlot(x="date", y="平均延迟ms", title="日均延迟")
+            faq_table = gr.Dataframe(label="Top FAQ", headers=["question", "hits", "category"], interactive=False)
+
+            def _refresh(days):
+                return stats_summary(days), intent_dist_df(days), strategy_dist_df(days), daily_latency_df(days), faq_top_df(days)
+
+            out = [summary_md, intent_plot, strategy_plot, daily_plot, faq_table]
+            refresh_stats.click(_refresh, [days_slider], out)
+            days_slider.change(_refresh, [days_slider], out)
+            demo.load(_refresh, [days_slider], out)
 
     return demo
 

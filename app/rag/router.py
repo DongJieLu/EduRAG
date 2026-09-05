@@ -15,7 +15,7 @@ from app.rag.generator import _extract_json, _to_float
 
 logger = logging.getLogger(__name__)
 
-# L1 规则词（技术问答领域的 faq 倾向词，避开机构/课程/讲师相关字样）
+# L1 规则词（技术问答领域的 faq 倾向词，避开第三方品牌/人名等字样）
 # 注意：刻意排除「是什么」「如何」「原理」等宽泛词——它们也高频出现在深度/开放问题中，
 # 会误判 complex 类问题为 faq，交由 L2/L3 兜底更准确。
 FAQ_RULE_WORDS = ("什么是", "定义", "区别", "怎么用", "介绍", "概念", "有什么用")
@@ -74,24 +74,33 @@ class Router:
         return {"intent": "rag", "confidence": 0.5, "reason": "LLM 分类失败，默认 rag"}
 
     def route(self, question: str, category: str | None = None) -> dict:
+        detail: dict = {"l1": None, "l2": None, "l3": None}
         if not question or not question.strip():
-            return {"intent": "reject", "confidence": 1.0, "reason": "空问题"}
+            detail["l1"] = {"hit": True, "intent": "reject", "reason": "空问题"}
+            return {"intent": "reject", "confidence": 1.0, "reason": "空问题", "route_detail": detail}
         l1 = self._rule_route(question)
         if l1:
+            detail["l1"] = {"hit": True, "intent": l1["intent"], "reason": l1["reason"]}
+            l1["route_detail"] = detail
             return l1
 
         sim = self._faq.best_similarity(question, category)
+        detail["l2"] = {"similarity": round(sim, 4)}
 
         if sim >= L2_FAQ_THRESHOLD:
-            return {"intent": "faq", "confidence": min(round(sim, 4), 0.95), "reason": "语义相似度≥0.90"}
+            detail["l2"]["decision"] = "faq"
+            return {"intent": "faq", "confidence": min(round(sim, 4), 0.95), "reason": "语义相似度≥0.90", "route_detail": detail}
 
         if sim >= L2_PENDING_THRESHOLD:
+            detail["l2"]["decision"] = "pending"
             l3 = self._llm_classify(question)
+            detail["l3"] = {"intent": l3["intent"], "confidence": l3["confidence"], "reason": l3["reason"]}
             if l3["intent"] == "faq":
-                return {"intent": "faq", "confidence": l3["confidence"], "reason": "语义待定，LLM 确认 faq"}
-            return {"intent": "rag", "confidence": l3["confidence"], "reason": "语义待定，非 faq 走 RAG"}
+                return {"intent": "faq", "confidence": l3["confidence"], "reason": "语义待定，LLM 确认 faq", "route_detail": detail}
+            return {"intent": "rag", "confidence": l3["confidence"], "reason": "语义待定，非 faq 走 RAG", "route_detail": detail}
 
         l3 = self._llm_classify(question)
+        detail["l3"] = {"intent": l3["intent"], "confidence": l3["confidence"], "reason": l3["reason"]}
         if l3["intent"] == "reject":
-            return {"intent": "reject", "confidence": l3["confidence"], "reason": "语义低，LLM 判拒答"}
-        return {"intent": "rag", "confidence": l3["confidence"], "reason": "默认 RAG"}
+            return {"intent": "reject", "confidence": l3["confidence"], "reason": "语义低，LLM 判拒答", "route_detail": detail}
+        return {"intent": "rag", "confidence": l3["confidence"], "reason": "默认 RAG", "route_detail": detail}

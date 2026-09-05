@@ -95,30 +95,44 @@ class Generator:
             refs.append(f"[{i}] ({doc_name}, {title}, {category})\n{text}")
         return "\n\n".join(refs) if refs else "（无参考片段）"
 
-    def build_prompt(self, question: str, contexts: list[dict]) -> list[ChatMessage]:
-        """contexts: [{doc_name, title, category, text}]。"""
-        ref_block = self._format_refs(contexts)
-        user = (
-            f"参考片段：\n{ref_block}\n\n"
-            f"用户问题：{question}\n\n"
-            f"请按如下 JSON 格式输出：{OUTPUT_SCHEMA_HINT}"
-        )
-        return [ChatMessage(role="system", content=SYSTEM_PROMPT), ChatMessage(role="user", content=user)]
+    @staticmethod
+    def _format_history(history: list[ChatMessage] | None) -> str:
+        if not history:
+            return ""
+        lines = []
+        for m in history[-6:]:
+            tag = "用户" if m.role == "user" else "助手"
+            lines.append(f"{tag}: {m.content}")
+        return "\n".join(lines)
 
-    def _build_stream_prompt(self, question: str, contexts: list[dict]) -> list[ChatMessage]:
+    def build_prompt(self, question: str, contexts: list[dict], history: list[ChatMessage] | None = None) -> list[ChatMessage]:
+        """contexts: [{doc_name, title, category, text}]；history: 最近若干轮 ChatMessage。"""
+        ref_block = self._format_refs(contexts)
+        history_block = self._format_history(history)
+        parts = [f"参考片段：\n{ref_block}"]
+        if history_block:
+            parts.append(f"对话历史：\n{history_block}")
+        parts.append(f"用户问题：{question}\n\n请按如下 JSON 格式输出：{OUTPUT_SCHEMA_HINT}")
+        return [ChatMessage(role="system", content=SYSTEM_PROMPT), ChatMessage(role="user", content="\n\n".join(parts))]
+
+    def _build_stream_prompt(self, question: str, contexts: list[dict], history: list[ChatMessage] | None = None) -> list[ChatMessage]:
         """流式用：只要求输出回答正文（带 [N] 引用），不要求 JSON。"""
         ref_block = self._format_refs(contexts)
-        user = f"参考片段：\n{ref_block}\n\n用户问题：{question}"
-        return [ChatMessage(role="system", content=STREAM_SYSTEM_PROMPT), ChatMessage(role="user", content=user)]
+        history_block = self._format_history(history)
+        parts = [f"参考片段：\n{ref_block}"]
+        if history_block:
+            parts.append(f"对话历史：\n{history_block}")
+        parts.append(f"用户问题：{question}")
+        return [ChatMessage(role="system", content=STREAM_SYSTEM_PROMPT), ChatMessage(role="user", content="\n\n".join(parts))]
 
-    def generate(self, question: str, contexts: list[dict]) -> GenerationResult:
-        messages = self.build_prompt(question, contexts)
+    def generate(self, question: str, contexts: list[dict], history: list[ChatMessage] | None = None) -> GenerationResult:
+        messages = self.build_prompt(question, contexts, history)
         resp = self._llm.chat(messages, temperature=0.0)
         return self.parse_result(resp.content, contexts)
 
-    def stream(self, question: str, contexts: list[dict]):
+    def stream(self, question: str, contexts: list[dict], history: list[ChatMessage] | None = None):
         """流式产出回答正文 token；调用方自行累积后交给 parse_plain_result。"""
-        messages = self._build_stream_prompt(question, contexts)
+        messages = self._build_stream_prompt(question, contexts, history)
         yield from self._llm.stream(messages, temperature=0.0)
 
     def parse_plain_result(self, answer: str, contexts: list[dict], confidence: float = 0.0) -> GenerationResult:
