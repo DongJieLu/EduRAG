@@ -1,14 +1,17 @@
-"""RAG 聊天服务编排：检索 → 重排 → 无证据拒答 → 生成。
+"""RAG 聊天服务编排：缓存 → 路由 → FAQ/RAG/reject 分发 → 写缓存。
 
-M3 固定 intent=rag、strategy=direct；M4 在此前置 FAQ 通道与三层路由，M5 扩展策略引擎。
+M4 增加 FAQ 通道 + 三层路由 + 答案缓存；M5 扩展策略引擎。
 """
 from __future__ import annotations
 
 import logging
 import time
 
+from app.rag.cache import AnswerCache
+from app.rag.faq import FAQService
 from app.rag.generator import MIN_EVIDENCE_SCORE, REJECT_ANSWER, Generator
 from app.rag.retriever import Retriever
+from app.rag.router import Router
 from app.rerank import get_reranker
 
 logger = logging.getLogger(__name__)
@@ -18,11 +21,24 @@ TOP_K_RERANK = 5
 
 
 class ChatService:
-    def __init__(self, retriever=None, reranker=None, generator=None) -> None:
+    def __init__(
+        self,
+        retriever=None,
+        reranker=None,
+        generator=None,
+        router=None,
+        faq_service=None,
+        cache=None,
+    ) -> None:
         self._retriever = retriever or Retriever()
         self._generator = generator or Generator()
         self._reranker = reranker
         self._reranker_tried = False
+        self._faq = faq_service or FAQService()
+        self._router = router or Router(faq_service=self._faq)
+        self._cache = cache or AnswerCache()
+
+    # --- 重排 ---
 
     def _get_reranker(self):
         if self._reranker is None and not self._reranker_tried:
@@ -57,29 +73,74 @@ class ChatService:
             "score": round(float(score), 4),
         }
 
-    def _build_reject(self, latency_ms: int, answer: str = REJECT_ANSWER) -> dict:
+    @staticmethod
+    def _reject_response(intent: str, latency_ms: int, answer: str = REJECT_ANSWER) -> dict:
         return {
-            "intent": "rag",
+            "intent": intent,
             "answer": answer,
             "citations": [],
-            "strategy": "direct",
+            "strategy": "",
             "latency_ms": latency_ms,
             "confidence": 0.0,
             "rejected": True,
         }
 
+    # --- 非流式 ---
+
     def chat(self, question: str, category: str | None = None, session_id: str | None = None) -> dict:
         start = time.perf_counter()
+        cached = self._cache.get(question, category)
+        if cached is not None:
+            cached["cache_hit"] = True
+            cached["latency_ms"] = self._elapsed(start)
+            return cached
+
+        result = self._dispatch(question, category, start)
+        result["cache_hit"] = False
+        self._cache.set(question, category, result, rejected=result.get("rejected", False))
+        return result
+
+    def _dispatch(self, question: str, category: str | None, start: float) -> dict:
+        route = self._router.route(question, category)
+        if route["intent"] == "reject":
+            return self._reject_response("reject", self._elapsed(start))
+        if route["intent"] == "faq":
+            faq_result = self._answer_faq(question, category, start)
+            if faq_result is not None:
+                return faq_result
+            logger.info("FAQ 未命中，降级 RAG")
+        return self._answer_rag(question, category, start)
+
+    def _answer_faq(self, question: str, category: str | None, start: float) -> dict | None:
+        matched = self._faq.search(question, category, top_k=1)
+        if not matched:
+            return None
+        best = matched[0]
+        try:
+            self._faq.increment_hit_count(best["faq_id"])
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("FAQ hit_count 更新失败: %s", exc)
+        return {
+            "intent": "faq",
+            "answer": best["answer"],
+            "citations": [],
+            "strategy": "faq",
+            "latency_ms": self._elapsed(start),
+            "confidence": best["score"],
+            "rejected": False,
+        }
+
+    def _answer_rag(self, question: str, category: str | None, start: float) -> dict:
         hits = self._retriever.retrieve(question, category=category, top_k=TOP_K_RECALL)
         top = self._rerank(question, hits)
         if not top:
-            return self._build_reject(self._elapsed(start))
+            return self._reject_response("rag", self._elapsed(start))
 
         scores = [s for _, s in top]
         avg = sum(scores) / len(scores)
         if avg < MIN_EVIDENCE_SCORE:
             logger.info("检索证据不足（avg=%.3f），触发拒答", avg)
-            return self._build_reject(self._elapsed(start))
+            return self._reject_response("rag", self._elapsed(start))
 
         contexts = [self._to_context(h, s) for h, s in top]
         result = self._generator.generate(question, contexts)
@@ -93,19 +154,59 @@ class ChatService:
             "rejected": result.rejected,
         }
 
+    # --- 流式 ---
+
     def stream_chat(self, question: str, category: str | None = None, session_id: str | None = None):
         """SSE 风格事件流：route / token / citation / done。"""
         start = time.perf_counter()
+        cached = self._cache.get(question, category)
+        if cached is not None:
+            yield {"type": "route", "intent": cached.get("intent", "rag"), "strategy": cached.get("strategy", "")}
+            yield {"type": "token", "content": cached.get("answer", "")}
+            yield {"type": "citation", "citations": cached.get("citations", [])}
+            yield {
+                "type": "done",
+                "latency_ms": self._elapsed(start),
+                "rejected": cached.get("rejected", False),
+                "cache_hit": True,
+            }
+            return
+
+        route = self._router.route(question, category)
+        yield {"type": "route", "intent": route["intent"], "strategy": self._strategy_for(route["intent"])}
+
+        if route["intent"] == "reject":
+            yield {"type": "token", "content": REJECT_ANSWER}
+            yield {"type": "citation", "citations": []}
+            yield {"type": "done", "latency_ms": self._elapsed(start), "rejected": True, "cache_hit": False}
+            return
+
+        if route["intent"] == "faq":
+            matched = self._faq.search(question, category, top_k=1)
+            if matched:
+                best = matched[0]
+                try:
+                    self._faq.increment_hit_count(best["faq_id"])
+                except Exception:  # noqa: BLE001
+                    pass
+                self._cache.set(question, category, {
+                    "intent": "faq", "answer": best["answer"], "citations": [],
+                    "strategy": "faq", "latency_ms": 0, "confidence": best["score"], "rejected": False,
+                })
+                yield {"type": "token", "content": best["answer"]}
+                yield {"type": "citation", "citations": []}
+                yield {"type": "done", "latency_ms": self._elapsed(start), "rejected": False, "cache_hit": False}
+                return
+
+        # RAG 流式
         hits = self._retriever.retrieve(question, category=category, top_k=TOP_K_RECALL)
         top = self._rerank(question, hits)
-        yield {"type": "route", "intent": "rag", "strategy": "direct"}
-
         scores = [s for _, s in top]
-        avg = sum(scores) / len(scores)
+        avg = sum(scores) / len(scores) if scores else 0.0
         if not top or avg < MIN_EVIDENCE_SCORE:
             yield {"type": "token", "content": REJECT_ANSWER}
             yield {"type": "citation", "citations": []}
-            yield {"type": "done", "latency_ms": self._elapsed(start), "rejected": True}
+            yield {"type": "done", "latency_ms": self._elapsed(start), "rejected": True, "cache_hit": False}
             return
 
         contexts = [self._to_context(h, s) for h, s in top]
@@ -115,13 +216,28 @@ class ChatService:
             yield {"type": "token", "content": token}
 
         result = self._generator.parse_plain_result("".join(buf), contexts, confidence=avg)
+        final = {
+            "intent": "rag",
+            "answer": result.answer,
+            "citations": result.citations,
+            "strategy": "direct",
+            "latency_ms": self._elapsed(start),
+            "confidence": result.confidence,
+            "rejected": result.rejected,
+        }
+        self._cache.set(question, category, final, rejected=result.rejected)
         yield {"type": "citation", "citations": result.citations}
         yield {
             "type": "done",
             "latency_ms": self._elapsed(start),
             "rejected": result.rejected,
             "confidence": result.confidence,
+            "cache_hit": False,
         }
+
+    @staticmethod
+    def _strategy_for(intent: str) -> str:
+        return {"faq": "faq", "rag": "direct"}.get(intent, "")
 
     @staticmethod
     def _elapsed(start: float) -> int:
