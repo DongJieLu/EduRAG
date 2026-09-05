@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     # --- Redis ---
     redis_host: str = "localhost"
-    redis_port: int = 6379
+    redis_port: int = 6380
 
     # --- 向量库（开发期 Chroma）---
     chroma_persist_dir: str = "./data/chroma"
