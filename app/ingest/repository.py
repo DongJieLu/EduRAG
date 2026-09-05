@@ -71,6 +71,21 @@ class KnowledgeRepository:
             rows = conn.execute(text(sql), params)
             return [dict(r._mapping) for r in rows]
 
+    def list_chunks(self, category: str | None = None) -> list[dict]:
+        """返回全部 chunk 元数据 + 文本（供混合检索的关键词召回）。"""
+        sql = (
+            "SELECT chunk_id, doc_id, doc_name, category, title, page_no, chunk_text "
+            "FROM knowledge_chunk WHERE 1=1"
+        )
+        params: dict = {}
+        if category:
+            sql += " AND category = :category"
+            params["category"] = category
+        sql += " ORDER BY chunk_id"
+        with self._engine.connect() as conn:
+            rows = conn.execute(text(sql), params)
+            return [dict(r._mapping) for r in rows]
+
     def delete_document(self, doc_id: int) -> list[str]:
         """删除文档及其 chunks，返回被删 chunk 的 milvus_id 列表（用于同步删向量）。"""
         with self._engine.begin() as conn:

@@ -12,6 +12,7 @@ from app.rag.faq import FAQService
 from app.rag.generator import MIN_EVIDENCE_SCORE, REJECT_ANSWER, Generator
 from app.rag.retriever import Retriever
 from app.rag.router import Router
+from app.rag.strategy import StrategyEngine, StrategyPlan
 from app.rerank import get_reranker
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,8 @@ class ChatService:
         router=None,
         faq_service=None,
         cache=None,
+        strategy_engine=None,
+        hybrid: bool = True,
     ) -> None:
         self._retriever = retriever or Retriever()
         self._generator = generator or Generator()
@@ -37,6 +40,8 @@ class ChatService:
         self._faq = faq_service or FAQService()
         self._router = router or Router(faq_service=self._faq)
         self._cache = cache or AnswerCache()
+        self._strategy = strategy_engine or StrategyEngine()
+        self._hybrid = hybrid
 
     # --- 重排 ---
 
@@ -131,7 +136,8 @@ class ChatService:
         }
 
     def _answer_rag(self, question: str, category: str | None, start: float) -> dict:
-        hits = self._retriever.retrieve(question, category=category, top_k=TOP_K_RECALL)
+        plan = self._strategy.plan(question)
+        hits = self._retrieve_for_plan(plan, category)
         top = self._rerank(question, hits)
         if not top:
             return self._reject_response("rag", self._elapsed(start))
@@ -148,11 +154,25 @@ class ChatService:
             "intent": "rag",
             "answer": result.answer,
             "citations": result.citations,
-            "strategy": "direct",
+            "strategy": plan.strategy,
             "latency_ms": self._elapsed(start),
             "confidence": result.confidence,
             "rejected": result.rejected,
         }
+
+    def _retrieve_for_plan(self, plan: StrategyPlan, category: str | None) -> list[dict]:
+        """按策略产出的 query 列表检索，多个 query 的结果按 chunk_id 去重合并。"""
+        seen: dict[str, dict] = {}
+        for q in plan.queries:
+            if self._hybrid:
+                hits = self._retriever.hybrid_retrieve(q, category=category, top_k=TOP_K_RECALL)
+            else:
+                hits = self._retriever.retrieve(q, category=category, top_k=TOP_K_RECALL)
+            for h in hits:
+                key = str((h.get("metadata") or {}).get("chunk_id") or h.get("id"))
+                if key not in seen:
+                    seen[key] = h
+        return list(seen.values())
 
     # --- 流式 ---
 
@@ -173,9 +193,9 @@ class ChatService:
             return
 
         route = self._router.route(question, category)
-        yield {"type": "route", "intent": route["intent"], "strategy": self._strategy_for(route["intent"])}
 
         if route["intent"] == "reject":
+            yield {"type": "route", "intent": "reject", "strategy": ""}
             yield {"type": "token", "content": REJECT_ANSWER}
             yield {"type": "citation", "citations": []}
             yield {"type": "done", "latency_ms": self._elapsed(start), "rejected": True, "cache_hit": False}
@@ -193,13 +213,17 @@ class ChatService:
                     "intent": "faq", "answer": best["answer"], "citations": [],
                     "strategy": "faq", "latency_ms": 0, "confidence": best["score"], "rejected": False,
                 })
+                yield {"type": "route", "intent": "faq", "strategy": "faq"}
                 yield {"type": "token", "content": best["answer"]}
                 yield {"type": "citation", "citations": []}
                 yield {"type": "done", "latency_ms": self._elapsed(start), "rejected": False, "cache_hit": False}
                 return
 
-        # RAG 流式
-        hits = self._retriever.retrieve(question, category=category, top_k=TOP_K_RECALL)
+        # RAG 流式：先做策略决策（决定检索 query），再检索
+        plan = self._strategy.plan(question)
+        yield {"type": "route", "intent": "rag", "strategy": plan.strategy}
+
+        hits = self._retrieve_for_plan(plan, category)
         top = self._rerank(question, hits)
         scores = [s for _, s in top]
         avg = sum(scores) / len(scores) if scores else 0.0
@@ -220,7 +244,7 @@ class ChatService:
             "intent": "rag",
             "answer": result.answer,
             "citations": result.citations,
-            "strategy": "direct",
+            "strategy": plan.strategy,
             "latency_ms": self._elapsed(start),
             "confidence": result.confidence,
             "rejected": result.rejected,
@@ -234,10 +258,6 @@ class ChatService:
             "confidence": result.confidence,
             "cache_hit": False,
         }
-
-    @staticmethod
-    def _strategy_for(intent: str) -> str:
-        return {"faq": "faq", "rag": "direct"}.get(intent, "")
 
     @staticmethod
     def _elapsed(start: float) -> int:

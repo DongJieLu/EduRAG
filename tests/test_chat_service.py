@@ -10,6 +10,9 @@ class FakeRetriever:
     def retrieve(self, query, category=None, top_k=50):
         return self._hits
 
+    def hybrid_retrieve(self, query, category=None, top_k=50):
+        return self._hits
+
 
 class FakeReranker:
     def __init__(self, scores):
@@ -44,6 +47,17 @@ class FakeRouter:
         return {"intent": self.intent, "confidence": self.confidence, "reason": self.reason}
 
 
+class FakeStrategyEngine:
+    def __init__(self, strategy="direct", queries=None):
+        self.strategy = strategy
+        self.queries = queries
+
+    def plan(self, question, history=None):
+        from app.rag.strategy import StrategyPlan
+
+        return StrategyPlan(self.strategy, self.queries or [question], "test")
+
+
 class FakeFAQService:
     def __init__(self, matched=None):
         self._matched = matched or []
@@ -71,7 +85,7 @@ def _hit(doc_name="a", text="片段", score=0.8):
     return {"id": "1", "text": text, "metadata": {"doc_name": doc_name, "title": "t", "category": "ai"}, "score": score}
 
 
-def _svc(intent="rag", hits=None, scores=None, generator=None, faq=None, cache=None):
+def _svc(intent="rag", hits=None, scores=None, generator=None, faq=None, cache=None, strategy=None):
     return ChatService(
         retriever=FakeRetriever(hits if hits is not None else []),
         reranker=FakeReranker(scores if scores is not None else []),
@@ -79,6 +93,7 @@ def _svc(intent="rag", hits=None, scores=None, generator=None, faq=None, cache=N
         router=FakeRouter(intent=intent),
         faq_service=faq or FakeFAQService(),
         cache=cache or FakeCache(),
+        strategy_engine=strategy or FakeStrategyEngine(),
     )
 
 

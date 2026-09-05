@@ -1,0 +1,100 @@
+{"id": "e001", "question": "什么是 RAG？", "category": "ai", "type": "faq", "expected_faq": "什么是 RAG？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e002", "question": "RAG 是什么的缩写？", "category": "ai", "type": "faq", "expected_faq": "什么是 RAG？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e003", "question": "解释一下 RAG 技术", "category": "ai", "type": "faq", "expected_faq": "什么是 RAG？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e004", "question": "什么是向量数据库？", "category": "ai", "type": "faq", "expected_faq": "什么是向量数据库？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e005", "question": "向量数据库是做什么的？", "category": "ai", "type": "faq", "expected_faq": "什么是向量数据库？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e006", "question": "介绍一下向量数据库", "category": "ai", "type": "faq", "expected_faq": "什么是向量数据库？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e007", "question": "什么是 Java 的多态？", "category": "java", "type": "faq", "expected_faq": "什么是 Java 的多态？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e008", "question": "Java 多态是什么意思？", "category": "java", "type": "faq", "expected_faq": "什么是 Java 的多态？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e009", "question": "解释 Java 面向对象的多态", "category": "java", "type": "faq", "expected_faq": "什么是 Java 的多态？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e010", "question": "HashMap 与 Hashtable 的区别？", "category": "java", "type": "faq", "expected_faq": "HashMap 与 Hashtable 的区别？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e011", "question": "HashMap 和 Hashtable 有什么不同？", "category": "java", "type": "faq", "expected_faq": "HashMap 与 Hashtable 的区别？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e012", "question": "对比一下 HashMap 和 Hashtable", "category": "java", "type": "faq", "expected_faq": "HashMap 与 Hashtable 的区别？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e013", "question": "什么是单元测试？", "category": "test", "type": "faq", "expected_faq": "什么是单元测试？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e014", "question": "单元测试是干什么的？", "category": "test", "type": "faq", "expected_faq": "什么是单元测试？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e015", "question": "介绍一下单元测试", "category": "test", "type": "faq", "expected_faq": "什么是单元测试？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e016", "question": "黑盒测试与白盒测试的区别？", "category": "test", "type": "faq", "expected_faq": "黑盒测试与白盒测试的区别？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e017", "question": "黑盒测试和白盒测试有什么不同？", "category": "test", "type": "faq", "expected_faq": "黑盒测试与白盒测试的区别？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e018", "question": "对比黑盒测试与白盒测试", "category": "test", "type": "faq", "expected_faq": "黑盒测试与白盒测试的区别？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e019", "question": "什么是 Docker？", "category": "ops", "type": "faq", "expected_faq": "什么是 Docker？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e020", "question": "Docker 是做什么的？", "category": "ops", "type": "faq", "expected_faq": "什么是 Docker？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e021", "question": "介绍一下 Docker 容器", "category": "ops", "type": "faq", "expected_faq": "什么是 Docker？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e022", "question": "什么是 CI/CD？", "category": "ops", "type": "faq", "expected_faq": "什么是 CI/CD？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e023", "question": "CI/CD 是什么意思？", "category": "ops", "type": "faq", "expected_faq": "什么是 CI/CD？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e024", "question": "解释一下持续集成和持续部署", "category": "ops", "type": "faq", "expected_faq": "什么是 CI/CD？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e025", "question": "什么是 Hadoop？", "category": "bigdata", "type": "faq", "expected_faq": "什么是 Hadoop？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e026", "question": "Hadoop 是做什么的？", "category": "bigdata", "type": "faq", "expected_faq": "什么是 Hadoop？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e027", "question": "介绍一下 Hadoop 框架", "category": "bigdata", "type": "faq", "expected_faq": "什么是 Hadoop？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e028", "question": "什么是 Spark？", "category": "bigdata", "type": "faq", "expected_faq": "什么是 Spark？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e029", "question": "Spark 是做什么的？", "category": "bigdata", "type": "faq", "expected_faq": "什么是 Spark？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e030", "question": "介绍一下 Spark 引擎", "category": "bigdata", "type": "faq", "expected_faq": "什么是 Spark？", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e031", "question": "RAG 的核心思想是什么？请详细说明", "category": "ai", "type": "complex", "expected_answer_keys": ["检索", "生成"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e032", "question": "RAG 如何降低大语言模型的幻觉问题？", "category": "ai", "type": "complex", "expected_answer_keys": ["检索", "幻觉"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e033", "question": "为什么 RAG 能实现答案可溯源？", "category": "ai", "type": "complex", "expected_answer_keys": ["溯源", "片段"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e034", "question": "RAG 相比直接使用大模型有哪些优势？", "category": "ai", "type": "complex", "expected_answer_keys": ["检索", "证据"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e035", "question": "检索增强生成中的检索阶段起到什么作用？", "category": "ai", "type": "complex", "expected_answer_keys": ["检索", "片段"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e036", "question": "RAG 系统的工作流程包含哪些步骤？", "category": "ai", "type": "complex", "expected_answer_keys": ["解析", "分块", "向量化", "检索", "重排", "生成"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e037", "question": "RAG 的五个步骤分别是什么？", "category": "ai", "type": "complex", "expected_answer_keys": ["解析", "分块", "向量化", "检索", "生成"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e038", "question": "文档解析与分块在 RAG 中做什么？", "category": "ai", "type": "complex", "expected_answer_keys": ["解析", "分块"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e039", "question": "向量化编码在 RAG 中的作用是什么？", "category": "ai", "type": "complex", "expected_answer_keys": ["向量", "编码"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e040", "question": "RAG 中向量检索是如何工作的？", "category": "ai", "type": "complex", "expected_answer_keys": ["向量", "相似"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e041", "question": "重排序在 RAG 流程中处于什么位置？", "category": "ai", "type": "complex", "expected_answer_keys": ["重排", "检索", "生成"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e042", "question": "RAG 的答案生成阶段做了什么？", "category": "ai", "type": "complex", "expected_answer_keys": ["生成", "片段"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e043", "question": "RAG 系统中常见的分块策略有哪些？", "category": "ai", "type": "complex", "expected_answer_keys": ["递归", "语义", "结构"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e044", "question": "分块过大或过小会带来什么问题？", "category": "ai", "type": "complex", "expected_answer_keys": ["过大", "过小", "无关"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e045", "question": "递归字符分块是如何工作的？", "category": "ai", "type": "complex", "expected_answer_keys": ["递归", "分隔符"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e046", "question": "语义分块的特点是什么？", "category": "ai", "type": "complex", "expected_answer_keys": ["语义", "完整性"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e047", "question": "结构分块适合什么场景？", "category": "ai", "type": "complex", "expected_answer_keys": ["结构", "标题"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e048", "question": "为什么分块是 RAG 的关键环节？", "category": "ai", "type": "complex", "expected_answer_keys": ["分块", "关键"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e049", "question": "向量检索的基本原理是什么？", "category": "ai", "type": "complex", "expected_answer_keys": ["向量", "相似度"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e050", "question": "为什么语义相近的文本向量距离更近？", "category": "ai", "type": "complex", "expected_answer_keys": ["语义", "向量", "空间"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e051", "question": "向量检索用什么度量相似度？", "category": "ai", "type": "complex", "expected_answer_keys": ["余弦", "内积"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e052", "question": "余弦相似度和内积有什么区别？", "category": "ai", "type": "complex", "expected_answer_keys": ["余弦", "内积"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e053", "question": "向量检索在 RAG 系统中的作用？", "category": "ai", "type": "complex", "expected_answer_keys": ["向量", "检索"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e054", "question": "向量检索如何找到最相似的片段？", "category": "ai", "type": "complex", "expected_answer_keys": ["向量", "相似", "片段"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e055", "question": "重排序为什么能提升检索精度？", "category": "ai", "type": "complex", "expected_answer_keys": ["重排", "精度"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e056", "question": "向量检索和重排序有什么区别？", "category": "ai", "type": "complex", "expected_answer_keys": ["向量", "重排", "精度"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e057", "question": "重排模型如何给候选片段打分？", "category": "ai", "type": "complex", "expected_answer_keys": ["重排", "打分"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e058", "question": "为什么需要重排序这一步骤？", "category": "ai", "type": "complex", "expected_answer_keys": ["重排", "精度"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e059", "question": "近似最近邻算法有什么局限？", "category": "ai", "type": "complex", "expected_answer_keys": ["近似", "精度"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e060", "question": "重排序在 RAG 中如何工作？", "category": "ai", "type": "complex", "expected_answer_keys": ["重排", "候选", "打分"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e061", "question": "评估 RAG 系统通常关注哪些维度？", "category": "ai", "type": "complex", "expected_answer_keys": ["检索", "生成", "延迟"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e062", "question": "RAG 的检索质量如何评估？", "category": "ai", "type": "complex", "expected_answer_keys": ["召回", "命中"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e063", "question": "RAG 的生成质量关注哪些指标？", "category": "ai", "type": "complex", "expected_answer_keys": ["忠实", "相关"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e064", "question": "RAG 评估中的忠实度指什么？", "category": "ai", "type": "complex", "expected_answer_keys": ["忠实"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e065", "question": "如何构造金标集来评估 RAG？", "category": "ai", "type": "complex", "expected_answer_keys": ["金标", "评估"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e066", "question": "RAG 与知识库更新有什么关系？", "category": "ai", "type": "complex", "expected_answer_keys": ["更新", "入库"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e067", "question": "为什么知识库更新时不需要重新训练模型？", "category": "ai", "type": "complex", "expected_answer_keys": ["更新", "训练"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e068", "question": "RAG 如何保证答案基于证据？", "category": "ai", "type": "complex", "expected_answer_keys": ["证据", "片段"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e069", "question": "向量数据库在 RAG 系统中起什么作用？", "category": "ai", "type": "complex", "expected_answer_keys": ["向量", "数据库"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e070", "question": "RAG 适合解决什么问题？", "category": "ai", "type": "complex", "expected_answer_keys": ["检索", "生成"], "retrieval_docs": ["sample_rag.md"]}
+{"id": "e071", "question": "Java 面向对象的三大特性是什么？", "category": "java", "type": "complex", "expected_answer_keys": ["封装", "继承", "多态"], "retrieval_docs": ["sample_java.pdf"]}
+{"id": "e072", "question": "Java 封装的含义是什么？", "category": "java", "type": "complex", "expected_answer_keys": ["封装", "隐藏"], "retrieval_docs": ["sample_java.pdf"]}
+{"id": "e073", "question": "封装如何隐藏对象内部实现细节？", "category": "java", "type": "complex", "expected_answer_keys": ["封装", "隐藏", "细节"], "retrieval_docs": ["sample_java.pdf"]}
+{"id": "e074", "question": "Java 中封装的好处有哪些？", "category": "java", "type": "complex", "expected_answer_keys": ["封装", "接口"], "retrieval_docs": ["sample_java.pdf"]}
+{"id": "e075", "question": "面向对象的三大特性分别指什么？", "category": "java", "type": "complex", "expected_answer_keys": ["封装", "继承", "多态"], "retrieval_docs": ["sample_java.pdf"]}
+{"id": "e076", "question": "Java 中如何实现封装？", "category": "java", "type": "complex", "expected_answer_keys": ["封装", "方法"], "retrieval_docs": ["sample_java.pdf"]}
+{"id": "e077", "question": "为什么面向对象需要封装？", "category": "java", "type": "complex", "expected_answer_keys": ["封装", "隐藏"], "retrieval_docs": ["sample_java.pdf"]}
+{"id": "e078", "question": "面向对象编程的核心特性有哪些？", "category": "java", "type": "complex", "expected_answer_keys": ["封装", "继承", "多态"], "retrieval_docs": ["sample_java.pdf"]}
+{"id": "e079", "question": "Java 基础知识点包括哪些？", "category": "java", "type": "complex", "expected_answer_keys": ["封装", "面向对象"], "retrieval_docs": ["sample_java.pdf"]}
+{"id": "e080", "question": "封装与接口之间是什么关系？", "category": "java", "type": "complex", "expected_answer_keys": ["封装", "接口"], "retrieval_docs": ["sample_java.pdf"]}
+{"id": "e081", "question": "你好", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e082", "question": "谢谢", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e083", "question": "今天天气怎么样", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e084", "question": "帮我写一首诗", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e085", "question": "你是谁", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e086", "question": "现在几点了", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e087", "question": "推荐一部电影", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e088", "question": "怎么做红烧肉", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e089", "question": "明天的股市怎么样", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e090", "question": "讲个笑话", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e091", "question": "你会唱歌吗", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e092", "question": "最近有什么新闻", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e093", "question": "帮我订个外卖", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e094", "question": "周末去哪里玩", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e095", "question": "聊聊爱情观", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e096", "question": "怎么减肥", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e097", "question": "炒股有什么技巧", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e098", "question": "世界杯冠军是谁", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e099", "question": "给我讲个童话故事", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}
+{"id": "e100", "question": "再见", "category": null, "type": "reject", "expected_answer_keys": [], "retrieval_docs": []}

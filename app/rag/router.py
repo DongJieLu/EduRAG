@@ -16,7 +16,9 @@ from app.rag.generator import _extract_json, _to_float
 logger = logging.getLogger(__name__)
 
 # L1 规则词（技术问答领域的 faq 倾向词，避开机构/课程/讲师相关字样）
-FAQ_RULE_WORDS = ("什么是", "是什么", "定义", "区别", "怎么用", "如何", "介绍", "概念", "原理", "有什么用")
+# 注意：刻意排除「是什么」「如何」「原理」等宽泛词——它们也高频出现在深度/开放问题中，
+# 会误判 complex 类问题为 faq，交由 L2/L3 兜底更准确。
+FAQ_RULE_WORDS = ("什么是", "定义", "区别", "怎么用", "介绍", "概念", "有什么用")
 CHITCHAT_WORDS = ("你好", "您好", "谢谢", "再见", "在吗", "嗨", "hello", "hi")
 NEGATION_WORDS = ("不是", "不要", "没有", "并非", "难道", "别")
 
