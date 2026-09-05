@@ -100,7 +100,9 @@ class ChatService:
         top = self._rerank(question, hits)
         yield {"type": "route", "intent": "rag", "strategy": "direct"}
 
-        if not top or (sum(s for _, s in top) / len(top)) < MIN_EVIDENCE_SCORE:
+        scores = [s for _, s in top]
+        avg = sum(scores) / len(scores)
+        if not top or avg < MIN_EVIDENCE_SCORE:
             yield {"type": "token", "content": REJECT_ANSWER}
             yield {"type": "citation", "citations": []}
             yield {"type": "done", "latency_ms": self._elapsed(start), "rejected": True}
@@ -112,7 +114,7 @@ class ChatService:
             buf.append(token)
             yield {"type": "token", "content": token}
 
-        result = self._generator.parse_result("".join(buf), contexts)
+        result = self._generator.parse_plain_result("".join(buf), contexts, confidence=avg)
         yield {"type": "citation", "citations": result.citations}
         yield {
             "type": "done",

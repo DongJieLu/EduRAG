@@ -32,7 +32,7 @@ def test_get_llm_mock_provider(monkeypatch):
 
 def test_get_llm_deepseek_without_key_falls_back(monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "deepseek")
-    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "")  # 显式置空，覆盖 .env 中的真实 key
     get_settings.cache_clear()
     # 无 key 时应自动降级 mock，避免运行时报错
     assert isinstance(get_llm(), MockLLM)

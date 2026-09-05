@@ -23,6 +23,13 @@ OUTPUT_SCHEMA_HINT = (
     '"confidence":0.0,"needs_human":false}'
 )
 
+STREAM_SYSTEM_PROMPT = (
+    "你是 EduQA 课程问答助手。请严格依据用户提供的「参考片段」回答问题，"
+    "不得使用片段之外的知识编造内容。回答正文中引用片段处需标注来源编号（如 [1]）。"
+    "若参考片段不足以回答问题，请直接说明“未在资料中找到”。"
+    "只输出回答正文本身，不要输出 JSON 或任何额外格式。"
+)
+
 REJECT_ANSWER = "抱歉，我暂时无法根据当前知识库回答这个问题。您可以尝试换个问法，或补充更多背景信息。"
 
 NOT_FOUND_MARKERS = ("未在资料中找到", "未找到", "找不到", "无法回答")
@@ -77,8 +84,8 @@ class Generator:
     def __init__(self, llm: BaseLLM | None = None) -> None:
         self._llm = llm or get_llm()
 
-    def build_prompt(self, question: str, contexts: list[dict]) -> list[ChatMessage]:
-        """contexts: [{doc_name, title, category, text}]。"""
+    @staticmethod
+    def _format_refs(contexts: list[dict]) -> str:
         refs = []
         for i, ctx in enumerate(contexts, 1):
             doc_name = ctx.get("doc_name") or ""
@@ -86,7 +93,11 @@ class Generator:
             category = ctx.get("category") or ""
             text = (ctx.get("text") or "").strip()
             refs.append(f"[{i}] ({doc_name}, {title}, {category})\n{text}")
-        ref_block = "\n\n".join(refs) if refs else "（无参考片段）"
+        return "\n\n".join(refs) if refs else "（无参考片段）"
+
+    def build_prompt(self, question: str, contexts: list[dict]) -> list[ChatMessage]:
+        """contexts: [{doc_name, title, category, text}]。"""
+        ref_block = self._format_refs(contexts)
         user = (
             f"参考片段：\n{ref_block}\n\n"
             f"用户问题：{question}\n\n"
@@ -94,15 +105,38 @@ class Generator:
         )
         return [ChatMessage(role="system", content=SYSTEM_PROMPT), ChatMessage(role="user", content=user)]
 
+    def _build_stream_prompt(self, question: str, contexts: list[dict]) -> list[ChatMessage]:
+        """流式用：只要求输出回答正文（带 [N] 引用），不要求 JSON。"""
+        ref_block = self._format_refs(contexts)
+        user = f"参考片段：\n{ref_block}\n\n用户问题：{question}"
+        return [ChatMessage(role="system", content=STREAM_SYSTEM_PROMPT), ChatMessage(role="user", content=user)]
+
     def generate(self, question: str, contexts: list[dict]) -> GenerationResult:
         messages = self.build_prompt(question, contexts)
         resp = self._llm.chat(messages, temperature=0.0)
         return self.parse_result(resp.content, contexts)
 
     def stream(self, question: str, contexts: list[dict]):
-        """流式产出 token 字符串；调用方自行累积后交给 parse_result。"""
-        messages = self.build_prompt(question, contexts)
+        """流式产出回答正文 token；调用方自行累积后交给 parse_plain_result。"""
+        messages = self._build_stream_prompt(question, contexts)
         yield from self._llm.stream(messages, temperature=0.0)
+
+    def parse_plain_result(self, answer: str, contexts: list[dict], confidence: float = 0.0) -> GenerationResult:
+        """解析流式输出（纯文本回答）：引用由 contexts 兜底推导，拒答靠关键词/空答。"""
+        answer = (answer or "").strip()
+        not_found = any(marker in answer for marker in NOT_FOUND_MARKERS)
+        if not answer or not_found:
+            return GenerationResult(
+                answer=answer or REJECT_ANSWER,
+                citations=[],
+                confidence=confidence,
+                needs_human=True,
+                rejected=True,
+            )
+        citations = self._normalize_citations(None, contexts)
+        return GenerationResult(
+            answer=answer, citations=citations, confidence=confidence, needs_human=False, rejected=False
+        )
 
     def parse_result(self, content: str, contexts: list[dict]) -> GenerationResult:
         data = _extract_json(content)
